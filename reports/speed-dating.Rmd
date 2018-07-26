@@ -1,0 +1,168 @@
+---
+title: "Regression on Speed Dating Data"
+output:
+    html_document:
+        code_folding: hide
+        theme: flatly
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(here)
+library(GGally)
+library(ggfortify)
+library(broom)
+require(ISLR)
+library(modelr) # devtools::install_github("hadley/modelr")
+
+theme_set(theme_bw())
+
+```
+
+# Os Dados
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+readr::read_csv(here::here("data/speed-dating.csv"),
+                      progress = FALSE,
+                      col_types = cols(
+                        .default = col_integer(),
+                        int_corr = col_double(),
+                        field = col_character(),
+                        from = col_character(),
+                        career = col_character(),
+                        attr = col_double(),
+                        sinc = col_double(),
+                        intel = col_double(),
+                        fun = col_double(),
+                        amb = col_double(),
+                        shar = col_double(),
+                        like = col_double(),
+                        prob = col_double(),
+                        match_es = col_double(),
+                        attr3_s = col_character(),
+                        sinc3_s = col_character(),
+                        intel3_s = col_character(),
+                        fun3_s = col_character(),
+                        amb3_s = col_character())) -> data
+```
+
+# Variáveis candidatas
+
+Para a nossa análise, iremos escolher algumas variáveis que julgamos interessantes para uma possível visualização de relação com a _variável dependente_ ```like```.
+
+## Order
+
+```
+N-ésimo encontro da noite
+```
+
+O número do encontro pode ter influência na nossa variável dependente visto que os encontros anteriores podem ter influência direta na expectativa além de também contribuir na desenvoltura dos participantes, pois o participante pode "se soltar" mais fazendo com que os encontros sejam melhores. 
+
+## int_corr
+
+```
+Correlação entre os interesses dos participantes.
+```
+
+Identificar-se com uma pessoa através de algum interesse pode ser um fator decisivo na hora do _like_.
+
+## samerace
+
+```
+Indica se os participantes são da mesma raça.
+```
+A vida tem dessas ```¯\_(ツ)_/¯```.
+
+## age_o - age
+
+```
+age: Idade do participante 1;
+age_o: Idade do participante 2.
+```
+
+A diferença de idade pode influenciar positiva ou negativamente na decisão dos participantes.
+
+## field
+
+```
+Campo de estudo do participante 1.
+```
+
+## race
+
+```
+Raça do participante 1:
+1 - Black/African American;
+2 - European/Caucasian-American;
+3 - Latino/Hispanic American;
+4 - Asian/Pacific Islander/Asian-American;
+5 - Native American; 
+6 - Other.
+```
+
+A vida tem dessas ```¯\_(ツ)_/¯```.
+
+## from
+
+```
+De onde o participante 1 é.
+```
+
+A vida tem dessas ```¯\_(ツ)_/¯```.
+
+## attr
+
+```
+Quão atraente o participante 1 achou o participante 2.
+```
+
+## sinc
+
+## intel
+
+## fun
+
+## amb
+
+## shar
+
+## attr3_s (se for mais bonito, talvez seja mais exigente)
+
+## sinc3_s (talvez uma pessoa sincera queira uma pessoa sincera, verificar diferença entre sinc3_s e sinc)
+
+## intel3_s (verificar se diferença de inteligencia influencia no like)
+
+## fun3_s (verificar se diferença de diversão afeta o like)
+
+## amb3_s (talvez uma pessoa queira alguém para compartilhar ambições)
+
+# Variáveis escolhidas
+
+# Tratamento dos dados
+
+Diante das variáveis escolhidas, teremos que filtrar os nossos dados para que não contenha nenhum valor faltante visto que algumas pessoas deixaram de preencher alguns campos no formulário.
+
+```{r}
+data.model = lm(like ~ , data = advertising)
+tidy(tv.model)
+adv_augmented = advertising %>% 
+  add_predictions(tv.model) %>% 
+  add_residuals(tv.model)
+
+# Modelo x dados
+adv_augmented %>% 
+  ggplot(aes(x = TV)) + 
+  geom_line(aes(y = pred), size = 2, colour = "blue") + 
+  geom_point(aes(y = Sales))
+
+# Resíduos x dados
+adv_augmented %>% 
+  ggplot(aes(x = TV)) + 
+  geom_point(aes(y = resid), size = 2) +
+  geom_ref_line(h = 0, colour = "grey80")
+
+tidy(tv.model, conf.int = TRUE)
+glance(tv.model, conf.int = TRUE)
+```
+
