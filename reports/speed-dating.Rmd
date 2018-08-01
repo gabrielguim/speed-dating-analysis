@@ -1,11 +1,10 @@
 ---
-title: "Regression on Speed Dating Data"
+title: "Brainy is (really) the new sexy? Regressão com dados do Speed Dating"
 output:
     html_document:
         code_folding: hide
         theme: flatly
 ---
-
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 library(tidyverse)
@@ -119,50 +118,423 @@ Quão atraente o participante 1 achou o participante 2.
 
 ## sinc
 
+```
+Quão sincero o participante 1 achou o participante 2.
+``` 
+
 ## intel
+
+```
+Quão inteligente o participante 1 achou o participante 2.
+```
 
 ## fun
 
+```
+Quão divertido o participante 1 achou o participante 2.
+```
+
 ## amb
+
+```
+Quão ambicioso o participante 1 achou o participante 2.
+```
 
 ## shar
 
-## attr3_s (se for mais bonito, talvez seja mais exigente)
-
-## sinc3_s (talvez uma pessoa sincera queira uma pessoa sincera, verificar diferença entre sinc3_s e sinc)
-
-## intel3_s (verificar se diferença de inteligencia influencia no like)
-
-## fun3_s (verificar se diferença de diversão afeta o like)
-
-## amb3_s (talvez uma pessoa queira alguém para compartilhar ambições)
-
-# Variáveis escolhidas
-
-# Tratamento dos dados
-
-Diante das variáveis escolhidas, teremos que filtrar os nossos dados para que não contenha nenhum valor faltante visto que algumas pessoas deixaram de preencher alguns campos no formulário.
-
-```{r}
-data.model = lm(like ~ , data = advertising)
-tidy(tv.model)
-adv_augmented = advertising %>% 
-  add_predictions(tv.model) %>% 
-  add_residuals(tv.model)
-
-# Modelo x dados
-adv_augmented %>% 
-  ggplot(aes(x = TV)) + 
-  geom_line(aes(y = pred), size = 2, colour = "blue") + 
-  geom_point(aes(y = Sales))
-
-# Resíduos x dados
-adv_augmented %>% 
-  ggplot(aes(x = TV)) + 
-  geom_point(aes(y = resid), size = 2) +
-  geom_ref_line(h = 0, colour = "grey80")
-
-tidy(tv.model, conf.int = TRUE)
-glance(tv.model, conf.int = TRUE)
+```
+Quanto o participante 1 acha que compartilha interesses e hobbies com o participante 2.
 ```
 
+## attr3_s
+
+```
+Quão atraente o participante acha que é.
+```
+
+Se o participante se acha muito atraente, talvez ele possa ser mais exigente.
+
+Usaremos essa variável para verificar se a diferença entre a "atratividade" (attr3_s e attr) impacta no _like_.
+
+
+## sinc3_s
+
+```
+Quão sincero o participante acha que é.
+```
+
+Usaremos essa variável para verificar se a diferença de sinceridade (since3_s e sinc) impacta no _like_.
+
+## intel3_s
+
+```
+Quão inteligente o participante acha que é.
+```
+
+Usaremos essa variável para verificar se a diferença de inteligência (intel3_s e intel) impacta no _like_.
+
+## fun3_s
+
+```
+Quão divertido o participante acha que é.
+```
+
+Usaremos essa variável para verificar se a diferença de "diversão" (fun3_s e fun) impacta no _like_.
+
+## amb3_s
+
+```
+Quão ambicioso o participante acha que é.
+```
+
+É possível que uma pessoa ambiciosa queira outra pessoa para compartilhar ambições. Usaremos essa variável para verificar se a diferença de ambição (amb3_s e amb) impacta no _like_.
+
+# Escolhendo as variáveis independentes
+
+Como temos muitas variáveis que podem influenciar positiva ou negativamente, iremos selecionar algumas e verificar a influência delas na nossa variável resposta, o _like_. 
+
+## "brainy is the new sexy"
+
+Como diria a querida __Irene Adler__, _"brainy is the new sexy"_.
+
+![](../data/brainy.gif)
+ 
+
+Baseando-nos no que foi dito pela __Irene Adler__, iremos utilizar as "inteligências" e "atratividades" dos participantes e verificar se são fatores significantes na hora do __like__. Ou seja, as variáveis __intel__, __attr__, __intel3_s__ e __attr3_s__.
+
+# Tratando os dados
+
+Selecionando as variáveis que iremos analisar e retirando todos os registros que não possui um valor válido para qualquer uma das variáveis.
+
+```{r}
+data %>%
+  select(like, intel, intel3_s, attr, attr3_s) %>%
+  na.omit(intel3_s, attr3_s, intel, attr) %>%
+  mutate(
+    intel3_s = as.numeric(intel3_s),
+    attr3_s = as.numeric(attr3_s)
+  ) -> brainy_sexy
+```
+
+# Comportamento
+
+## intel
+
+```{r}
+brainy_sexy %>%
+  ggplot(aes(intel)) +
+    geom_density(stat = "density",
+      position = "identity", color = "darkorange") +
+    geom_point(aes(x = median(intel), y = 0.2, color = 'Mediana'))
+```
+
+Podemos perceber que existe uma maior concentração de valores acima de 7 (__mediana__) para a variável __intel__. 
+
+O __valor da mediana__ e a __densidade__ a partir da mediana pode nos indicar que os participantes 2 parecem ter uma inteligência relativamente alta (acima da mediana).
+
+## intel3_s
+
+```{r}
+brainy_sexy %>%
+  ggplot(aes(intel3_s)) +
+    geom_density(stat = "density",
+      position = "identity", color = "darkgreen") +
+    geom_point(aes(x = median(intel3_s), y = 0.6, color = 'Mediana'))
+```
+
+Podemos perceber que existe uma grande concentração de participantes que se dão uma nota 8 (de 10) sobre a sua inteligência. Além de termos algumas pessoas modestas (ou com a autoestima baixa), temos uma maior __densidade__ para quando a avaliação é acima de 8.
+
+## attr
+
+```{r}
+brainy_sexy %>%
+  ggplot(aes(attr)) +
+    geom_density(stat = "density",
+      position = "identity", color = "darkred") +
+    geom_point(aes(x = median(attr), y = 0.2, color = 'Mediana'))
+```
+
+O valor de _attr_ para os participantes 2 é bem diversivificado, isso não quer dizer que sejam mais ou menos bonitas pelo fato de não termos uma definição dos próprios participantes o que é uma pessoa atraente para eles. Mas para facilitar a nossa análise, iremos usar essa variável como um conjunto de outros atributos, não somente a beleza física. 
+ 
+## attr3_s
+
+```{r}
+brainy_sexy %>%
+  ggplot(aes(attr3_s)) +
+  geom_density(stat = "density",
+      position = "identity", color = "darkcyan") +
+  geom_point(aes(x = median(attr3_s), y = 0.5, color = 'Mediana'))
+```
+
+Por outro lado, alguns dos participantes 1 se auto classificaram com sendo atraentes (7 de 10). 
+
+# Perguntas
+
+## Qual a influência da inteligência dos participantes sob o fato de o participante 1 ter gostado do participante 2?
+
+### Somente para o participante 1
+
+```{r}
+mod_ip1 <- lm(like ~ intel3_s, 
+          data = brainy_sexy)
+
+glance(mod_ip1) 
+```
+
+Com um R² de __0.0004684427__ podemos perceber que o que o participante pensa sobre si mesmo a cerca da inteligência não tem tanta significância (separadamente) na decisão.
+
+### Somente para o participante 2
+
+```{r}
+mod_ip2 <- lm(like ~ intel, 
+          data = brainy_sexy)
+
+glance(mod_ip2) 
+```
+
+Com os valores obtidos podemos perceber o modelo com a inteligência do participante 2 explica aproximadamente __24%__ da nossa variável resposta (_like_).
+
+### Para os dois participantes
+
+```{r}
+mod_ip1p2 <- lm(like ~ intel3_s + intel, 
+          data = brainy_sexy)
+
+glance(mod_ip1p2) 
+```
+
+Como vimos mais acima que a inteligência do participante 1 não tem tanta significância sobre a decisão final, era esperado que também obtivessemos praticamente o valor da "significância" inteligência do participante 2.
+
+### A diferença entre quão inteligentes "são"
+
+```{r}
+
+brainy_diff <- brainy_sexy %>% mutate(intel_dif = intel - intel3_s)
+
+mod_diff <- lm(like ~ intel_dif, 
+          data = brainy_diff)
+
+glance(mod_diff) 
+```
+
+Visualizando a importância da diferença de inteligência dos participantes, percebemos que esse modelo explica aproximadamente __14%__ dos dados. 
+
+### Intervalos de confiança
+
+Utilizaremos o modelo ```lm(like ~ intel3_s + intel)```.
+
+```{r}
+tidy(mod_ip1p2, 
+     conf.int = TRUE, 
+     conf.level = 0.95)
+```
+
+
+```{r}
+tidy(mod_ip1p2, 
+     conf.int = TRUE, 
+     conf.level = 0.95)  %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(term, estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar(size = 0.8, width= 0.4) +
+  geom_point(color = "darkgreen", size = 2) +
+  geom_hline(yintercept = 0, colour = "darkred") +
+  labs(x = "Variável",
+       y = "Valor estimado (95% de confiança)")
+```
+
+### É positiva? Negativa?
+
+A inteligência do participante 2 tem valores entre ```[0.52204315,	0.61041362]``` com _95%_ de confiança, ou seja, eles possuem um efeito sempre positivo na variável resposta.
+
+Como é possível ver mais acima, a inteligência do participante 1 passa pelo eixo ```y = 0``` (com _95%_ de confiança) o que nos indica um efeito meio incerto, podendo ser positivo ou negativo.
+
+De modo geral, a inteligência do participante tem uma influência positiva na decisão final. Podemos perceber que a inteligência do participante 2 é bem mais "importante" do que a do participante 1 para que haja um bom _like_, e isso de certo modo era esperado pois em um encontro você leva em consideração mais os aspectos da pessoa a qual você está tendo o encontro.
+
+### É significante?
+
+Com _95%_ de confiança, podemos afirmar que a inteligência do participante 2 tem efeito significante sobre sobre o resultado justamente por não passar pelo eixo ```y = 0```. 
+
+Por outro lado, a inteligência do participante 1 não nos trás muita informação útil, visto que passa pelo eixo ```y = 0``` com _95%_ de confiança.
+
+Levando em consideração a inteligência do participante 2 (ou a "soma" das duas inteligências), obtivemos valores próximos de __24%__, o que não é um valor absurdamente alto ou que mostre uma significância que talvez fosse esperada.
+
+Talvez __brainy__ não seja tão o novo __sexy__ assim como disse a __Irene Adler__.
+
+### É relevante?
+
+Não podemos considerar esse modelo relevante pois ele explica somente _24%_ dos nossos dados.
+
+## Qual a influência da atração entre participantes sob o fato de o participante 1 ter gostado do participante 2?
+
+### Somente para o participante 1
+
+```{r}
+mod_ap1 <- lm(like ~ attr3_s, 
+          data = brainy_sexy)
+
+glance(mod_ap1) 
+```
+
+Com um R² de __0.004325186__ podemos perceber que o que o participante pensa sobre si mesmo a cerca da atração não tem tanta significância (separadamente) na decisão.
+
+### Somente para o participante 2
+
+```{r}
+mod_ap2 <- lm(like ~ attr, 
+          data = brainy_sexy)
+
+glance(mod_ap2) 
+```
+
+Com os valores obtidos podemos perceber o modelo com o quão atraente o participante 2 é explica aproximadamente __44%__ da nossa variável resposta (_like_).
+
+### Para os dois participantes
+
+```{r}
+mod_ap1p2 <- lm(like ~ attr3_s + attr, 
+          data = brainy_sexy)
+
+glance(mod_ap1p2) 
+```
+
+Como vimos mais acima, o quão atraente o participante 1 é não tem tanta significância sobre a decisão final, era esperado que também obtivessemos praticamente o valor da "significância" o valor do participante 2.
+
+### A diferença entre quão atrantes "são"
+
+```{r}
+
+sexy_diff <- brainy_sexy %>% mutate(attr_dif = attr - attr3_s)
+
+mod_diff2 <- lm(like ~ attr_dif, 
+          data = sexy_diff)
+
+glance(mod_diff2) 
+```
+
+Visualizando a importância da diferença do quão atraente "são" os participantes, percebemos que esse modelo explica aproximadamente __23%__ dos dados. 
+
+### Intervalos de confiança
+
+Utilizaremos o modelo ```lm(like ~ attr3_s + attr)```.
+
+```{r}
+tidy(mod_ap1p2, 
+     conf.int = TRUE, 
+     conf.level = 0.95)
+```
+
+
+```{r}
+tidy(mod_ap1p2, 
+     conf.int = TRUE, 
+     conf.level = 0.95)  %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(term, estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar(size = 0.8, width= 0.4) +
+  geom_point(color = "darkgreen", size = 2) +
+  geom_hline(yintercept = 0, colour = "darkred") +
+  labs(x = "Variável",
+       y = "Valor estimado (95% de confiança)")
+```
+
+### É positiva? Negativa?
+
+O valor para atração dos dois participantes tem valores positivos e que não cortam o eixo ```y = 0```. Ou seja, com _95%_ de confiança, podemos dizer que eles possuem um efeito sempre positivo na variável resposta.
+
+### É significante?
+
+Como nenhuma das duas variáveis passam pelo eixo ```y = 0``` e que também o modelo em questão explica __44%__ da nossa variável resposta, podemos dizer com _95%_ de confiança, que é sim significante.
+
+### É relevante?
+
+Não podemos considerar esse modelo relevante pois ele explica menos de _50%_ (apenas __44%__) dos nossos dados. Embora seja um valor maior que para o modelo utilizando a inteligência dos participantes, ainda não é um modelo bom o suficiente.
+
+## Qual a influência dos valores de atração e inteligência na decisão final?
+
+```{r}
+mod_final <- lm(like ~ intel + attr,
+          data = brainy_sexy)
+
+glance(mod_final) 
+```
+
+Com o modelo em questão, conseguimos explicar __51%__ da nossa amostra. O que não é um valor muito grande, mas como estamos utilizando uma quantidade bem menor de atributos que o conjunto de dados nos fornece, acredito que é uma boa marca.
+
+```{r}
+tidy(mod_final, 
+     conf.int = TRUE, 
+     conf.level = 0.95)
+```
+
+```{r}
+tidy(mod_final, 
+     conf.int = TRUE, 
+     conf.level = 0.95)  %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(term, estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar(size = 0.8, width= 0.4) +
+  geom_point(color = "darkgreen", size = 2) +
+  geom_hline(yintercept = 0, colour = "darkred") +
+  labs(x = "Variável",
+       y = "Valor estimado (95% de confiança)")
+```
+
+### É positiva? Negativa?
+
+O valor para as variáveis participantes tem valores positivos e que não cortam o eixo ```y = 0```. Ou seja, com _95%_ de confiança, podemos dizer que eles possuem um efeito sempre positivo na variável resposta, ou seja, quando a atração aumenta (principalmente) e a inteligência aumentam, a tendência é que a chance de o participante 1 gostar do participante 2 também aumenta.
+
+### É significante?
+
+Como nenhuma das duas variáveis passam pelo eixo ```y = 0``` e que também o modelo em questão explica __51%__ da nossa variável resposta, podemos dizer com _95%_ de confiança, que é sim significante.
+
+### É relevante?
+
+Como dito mais acima, acredito ser uma boa marca dado o modelo que está sendo usado. Contudo, um modelo que explica apenas __51%__ dos dados não é lá o modelo mais adequado para uma regressão. 
+
+Mas como a nossa pergunta está interessada apenas em verificar se existe influência das duas variáveis na hora de dar o _like_ no participante, é um modelo válido porém não o melhor existente. 
+
+# Análise de Resíduos
+
+```{r}
+mod_final.res <- resid(mod_final)
+std.resid <- rstandard(mod_final)
+like <- brainy_sexy$like
+
+resid_data <- data.frame(mod_final.res, std.resid,like,
+                       stringsAsFactors = FALSE)
+resid_data %>% 
+  sample_n(10)
+```
+
+```{r}
+resid_data %>%
+  ggplot(aes(like, mod_final.res)) +
+  geom_point(alpha = 0.4) +
+  geom_hline(yintercept = 0,
+             color = "darkorange") +
+  labs(x = "Variável Resposta (like)", y = "Resíduos") +
+  ggtitle("Análise de Resíduos")
+```
+
+Aparentemente o modelo escolhido não parece se adequar/ajustar aos dados de uma forma convincente.
+
+# Conclusão
+
+## Qual a influência dos valores de atração e inteligência na decisão final?
+
+### É positiva? Negativa?
+
+Como já dito mais acima, a inteligência e a atração pelo participante 2 tem uma influência positiva. Quão mais inteligente e atraente o participante 1 notar que o participante 2 é, maior é o valor do _like_. 
+
+### É significante?
+
+Com _95%_ de confiança, nós temos evidências de que são fatores significantes. Como vimos, o intervalo de confiança é totalmente acima do eixo ```y = 0```.
+
+### É relevante?
+
+Como já mencionado em textos mais acima, o fator que tem mais _"peso"_ na nossa variável resposta é o quão o participante 1 acha o participante 2.  Em outras palavras, isso quer dizer que para um encontro em condições semelhantes às que estão presentes na nossa amostra, é mais interessante para você __solteirão__ ou __solteirona__ ser atraente (_attr_) do que ser inteligente (_intel_) pois assim a chance de você receber um valor alto no _like_ é melhor.
+
+Infelizmente a frase de __Irene Adler__ não se aplica à nossa amostra. 
+
+![](../data/sad.gif)
