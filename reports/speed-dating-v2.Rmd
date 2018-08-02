@@ -1,0 +1,79 @@
+---
+title: "Brainy is (really) the new sexy? Regressão com dados do Speed Dating"
+output:
+    html_document:
+        code_folding: hide
+        theme: flatly
+---
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(here)
+library(GGally)
+library(ggfortify)
+library(broom)
+library(pscl)
+require(ISLR)
+library(modelr) # devtools::install_github("hadley/modelr")
+
+theme_set(theme_bw())
+
+```
+
+# Os Dados
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+readr::read_csv(here::here("data/speed-dating2.csv"),
+                      progress = FALSE,
+                      col_types = cols(
+                        .default = col_integer(),
+                        int_corr = col_double(),
+                        field = col_character(),
+                        from = col_character(),
+                        career = col_character(),
+                        attr = col_double(),
+                        sinc = col_double(),
+                        intel = col_double(),
+                        fun = col_double(),
+                        amb = col_double(),
+                        shar = col_double(),
+                        like = col_double(),
+                        dec = col_character(),
+                        prob = col_double(),
+                        match_es = col_double(),
+                        attr3_s = col_character(),
+                        sinc3_s = col_character(),
+                        intel3_s = col_character(),
+                        fun3_s = col_character(),
+                        amb3_s = col_character())) -> data
+```
+
+```{r}
+data %>%
+  select(like, dec, intel, intel3_s, attr, attr3_s) %>%
+  na.omit(intel3_s, attr3_s) %>%
+  mutate(
+    dec_num = if_else(dec == "yes", 1, 0),
+    intel3_s = as.numeric(intel3_s),
+    attr3_s = as.numeric(attr3_s)
+  ) -> brainy_sexy
+```
+
+# Definindo a função Logit (logística)
+
+```{r}
+logit_func = function(b0, b1, x){
+  return(exp(b0 + b1 * x) / (1 + exp(b0 + b1 * x)))
+}
+
+bm <- glm(dec_num ~ intel + attr + intel3_s + attr3_s, 
+          data = brainy_sexy, 
+          family = "binomial")
+
+tidy(bm, conf.int = TRUE)
+tidy(bm, conf.int = TRUE, exponentiate = TRUE)
+
+glance(bm)
+pR2(bm)
+```
+
